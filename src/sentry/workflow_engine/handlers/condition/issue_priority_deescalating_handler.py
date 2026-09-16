@@ -13,7 +13,14 @@ from sentry.workflow_engine.types import DataConditionHandler, WorkflowEventData
 class IssuePriorityDeescalatingConditionHandler(DataConditionHandler[WorkflowEventData]):
     group = DataConditionHandler.Group.ACTION_FILTER
     subgroup = DataConditionHandler.Subgroup.ISSUE_ATTRIBUTES
-    comparison_json_schema = {"type": "integer", "enum": [*PriorityLevel]}
+    comparison_json_schema = {
+        "anyOf": [
+            {"type": "integer", "enum": [*PriorityLevel]},
+            # Temporary compatibility for the automation builder's broken default.
+            # Remove after ISWF-3453 is complete and stored comparisons are cleaned up.
+            {"type": "boolean", "const": True},
+        ]
+    }
 
     @staticmethod
     def evaluate_value(event_data: WorkflowEventData, comparison: Any) -> bool:
@@ -32,8 +39,8 @@ class IssuePriorityDeescalatingConditionHandler(DataConditionHandler[WorkflowEve
         # use this to determine if we've breached the comparison priority before
         highest_seen_priority = open_period.data.get("highest_seen_priority", current_priority)
 
-        # Existing rows may still contain the automation builder's previous boolean default.
-        # Keep evaluation compatible until those rows are migrated to a priority threshold.
+        # Preserve the current behavior for the automation builder's broken default.
+        # Remove this compatibility path after ISWF-3453 is complete.
         if comparison is True:
             return group.status == GroupStatus.RESOLVED
 
