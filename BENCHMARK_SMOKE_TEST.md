@@ -1,1 +1,1 @@
-Smoke test marker file — verifies the installed AI review tool triggers on this repo.
+Smoke test marker file — retry after Graphite CLI/config fix (2026-09-16T11:16:46Z).
